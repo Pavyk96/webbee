@@ -10,6 +10,7 @@ import writer.UserLogWriter;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,26 +45,23 @@ public class LogService {
      * @throws IOException если возникает ошибка при чтении или записи файлов
      */
     public void processAllLogs() throws IOException {
-        List<Path> logFiles = logFileReader.getAllLogFiles();
+        List<String> allLines = new ArrayList<>();
+        for (Path logFile : logFileReader.getAllLogFiles()) {
+            allLines.addAll(logFileReader.readLogFile(logFile));
+        }
 
         UserLogAggregator aggregator = new UserLogAggregator();
 
-        for (Path logFile : logFiles) {
-            List<String> lines = logFileReader.readLogFile(logFile);
-
-            for (String line : lines) {
-                try {
-                    LogEntry entry = logParser.parse(line);
-                    aggregator.add(entry);
-                } catch (IllegalArgumentException e) {
-                    System.err.println("Ошибка парсинга строки: " + line + " | " + e.getMessage());
-                }
+        for (String line : allLines) {
+            try {
+                LogEntry entry = logParser.parse(line);
+                aggregator.add(entry);
+            } catch (IllegalArgumentException e) {
+                System.err.println("Ошибка парсинга строки: " + line + " | " + e.getMessage());
             }
         }
 
-        Map<String, List<LogEntry>> userLogsMap = aggregator.getUserLogs();
-
-        for (Map.Entry<String, List<LogEntry>> entry : userLogsMap.entrySet()) {
+        for (Map.Entry<String, List<LogEntry>> entry : aggregator.getUserLogs().entrySet()) {
             String user = entry.getKey();
             List<LogEntry> logs = entry.getValue();
 
