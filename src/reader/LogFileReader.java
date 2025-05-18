@@ -3,6 +3,7 @@ package reader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.nio.file.*;
 import java.util.stream.Collectors;
@@ -49,6 +50,21 @@ public class LogFileReader {
      */
     public List<String> readLogFile(Path logFile) throws IOException {
         return Files.readAllLines(logFile);
+    }
+
+    /**
+     * Читает все строки из всех файлов.
+     *
+     * @return список строк файлов
+     * @throws IOException если файл не найден или не удаётся прочитать
+     */
+    public List<String> readAllLinesFromAllFiles() throws IOException {
+        List<Path> logFiles = getAllLogFiles();
+        List<String> allLines = new ArrayList<>();
+        for (Path path : logFiles) {
+            allLines.addAll(readLogFile(path));
+        }
+        return allLines;
     }
 }
 
